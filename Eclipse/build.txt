@@ -1,0 +1,3 @@
+displayName = Eclipse
+author = Dave#7207
+version = 0.1
