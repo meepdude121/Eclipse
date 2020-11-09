@@ -3,14 +3,15 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ID;
 
+// this boss may be reworked into an eclipse event boss
+
 namespace Eclipse.Bosses.FishronJr
 {
     class FishronJr : ModNPC
     {
         //private bool secondPhase = false; // Don't need to assign variable because i want the first part to work 
-        private int attackType = -1;
-        int counter = 0; // as the game runs at a static 60 frames / second, we can use a frame counter where every 60 frames is a second.
-        int waitTime = 0;
+
+
 
         // overriding default values for statistics and the display name.
         public override void SetStaticDefaults()
@@ -20,6 +21,10 @@ namespace Eclipse.Bosses.FishronJr
 
         public override void SetDefaults()
         {
+            npc.ai[2] = -1;
+            npc.ai[0] = 0; // Counter (as the game runs at a static 60 frames / second, we can use a frame counter where every 60 frames is a second.)
+            npc.ai[1] = 0; // time for counter to match to keep going
+
             npc.width = 194;
             npc.height = 144;
 
@@ -27,12 +32,12 @@ namespace Eclipse.Bosses.FishronJr
             npc.life = npc.lifeMax = 22000;
             npc.aiStyle = -1;
             npc.damage = 40;
-            npc.knockBackResist = 30f;
+            npc.knockBackResist = 0f;
             npc.noGravity = true;
-            npc.noTileCollide = false;
-            npc.lavaImmune = false;
+            npc.noTileCollide = true;
+            npc.lavaImmune = true;
             npc.boss = true;
-            npc.Center = new Vector2();
+            npc.value = Item.buyPrice(1, 0, 0, 0);
         }
 
         public override void ScaleExpertStats(int numPlayers, float bossLifeScale)
@@ -43,113 +48,35 @@ namespace Eclipse.Bosses.FishronJr
 
         public override bool PreAI()
         {
-            /*if (waitTime < counter)
-            {
-                counter = 0;
-                npc.TargetClosest(false);
-                npc.rotation = 90;
-                if (!secondPhase)
-                {
-                    attackType = Main.rand.Next(0, 1);
-                }
-                else
-                {
-                    attackType = AttackTypes.RandomAttackBasedOnNPC(AttackTypes.EclipseNPC.FishronJr, 1);
-                }
-                switch (attackType)
-                {
-                    case 0:
-                        {
-                            npc.TargetClosest(false);
-                            for (int i = 0; i < 10; i++)
-                            {
-                                Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], Main.player[npc.target].Center, 4, ProjectileID.WaterGun, 30, 0f);
-                            }
-                            waitTime = 360;
-                            break;
-                        }
-                    case 1:
-                        {
-                            int damage = 10;
-                            float knockback = 2f;
-                            int speed = 2;
-                            npc.TargetClosest(false);
-
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(1, 0), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(0, 1), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(-1, 0), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(0, -1), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(.5f, .5f), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(-.5f, .5f), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(.5f, -.5f), ProjectileID.SharknadoBolt, speed, damage, knockback);
-                            Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], new Vector2(-.5f, -.5f), ProjectileID.SharknadoBolt, speed, damage, knockback);
-
-                            for (int i = 0; i < 60; i++)
-                            {
-                                npc.FaceTarget();
-                            }
-                            Utils.MoveTowardsPlayer(Main.npc[npc.whoAmI], Main.player[npc.target], 3, 1);
-
-                            waitTime = 160;
-                            break;
-                        }
-
-                    case 2:
-                        {
-                            for (int i = 0; i < Main.player.Length; i++)
-                            {
-                                NPC.SpawnNPC();
-                            }
-
-                            break;
-                        }
-
-                    case 3:
-                        {
-                            int healthToHeal = 200 * Main.player.Length;
-                            if (npc.life + healthToHeal > npc.lifeMax)
-                            {
-                                npc.HealEffect(npc.lifeMax - npc.life);
-                            }
-                            else
-                            {
-                                npc.HealEffect(healthToHeal);
-                            }
-
-                            break;
-                        }
-                }
-            }*/ // REDO ALL CODE
-
-            switch (attackType)
+            switch (npc.ai[2])
             {
                 case 0:
                     npc.TargetClosest(false);
 
-                    if (counter / 5f % 1 != 0 && counter < waitTime)
+                    if (npc.ai[0] / 5f % 1 != 0 && npc.ai[0] < npc.ai[1])
                     {
                         Utils.FireProjectileAtPosition(Main.npc[npc.whoAmI], Main.player[npc.target].Center, 4, ProjectileID.WaterGun, 30, 0f);
                     }
 
-                    if (counter >= waitTime)
+                    if (npc.ai[0] >= npc.ai[1])
                     {
-                        attackType = -1;
+                        npc.ai[2] = -1;
                         Main.NewText("Attack 0 (" + AttackTypes.FishronJrAttacks.Phase1WaterStream.ToString() + ") is finished.");
-                        counter = 0;
-                        waitTime = 30;
+                        npc.ai[0] = 0;
+                        npc.ai[1] = 30;
                     }
 
                     break;
 
                 case 1:
-                    if (counter < waitTime)
+                    if (npc.ai[0] < npc.ai[1])
                     {
                         int damage = 60;
                         float knockback = 5f;
                         int speed = 1;
                         npc.TargetClosest(false);
 
-                        if (counter == 1)
+                        if (npc.ai[0] == 1)
                         {
                             for (int i = 0; i < Main.player.Length; i++)
                             {
@@ -158,7 +85,7 @@ namespace Eclipse.Bosses.FishronJr
                             }
                         }
 
-                        if (counter == 60||counter == 120||counter == 180)
+                        if (npc.ai[0] == 60||npc.ai[0] == 120||npc.ai[0] == 180)
                         {
                             // Utils.MoveTowardsTarget(Main.npc[npc.whoAmI], Main.player[npc.target].position, 15, 1); Use Utils.DashTowardsTarget() for smoother dashes!
                             Utils.DashTowardsTarget(Main.npc[npc.whoAmI], Main.player[npc.target].position, 40, 1, 1); // 40 is speed. Speed is blocks/2 per second
@@ -168,76 +95,76 @@ namespace Eclipse.Bosses.FishronJr
                             //speed is blocks/second (I think) 
                             Main.NewText("Dashed Towards: " + Main.player[npc.target].position.ToString());
                         }
-                        if (counter == 235)
+                        if (npc.ai[0] == 235)
                         {
                             npc.velocity = new Vector2(0, 0);
                         }
                     }
 
-                    if (counter >= waitTime)
+                    if (npc.ai[0] >= npc.ai[1])
                     {
-                        attackType = -1;
-                        counter = 50;
+                        npc.ai[2] = -1;
+                        npc.ai[0] = 50;
                     }
 
                     break;
                 case 2:
-                    if (counter == 1)
+                    if (npc.ai[0] == 1)
                     {
                         for (int i = 0; i < Main.ActivePlayersCount * 2; i++)
                             NPC.NewNPC((int)npc.position.X, (int)npc.position.Y, mod.NPCType("SmallSharkMinion"));
                     }
 
-                    if (counter >= waitTime)
+                    if (npc.ai[0] >= npc.ai[1])
                     {
-                        attackType = -1;
-                        counter = 15;
+                        npc.ai[2] = -1;
+                        npc.ai[0] = 15;
                     }
                     break;
                 case 3:
-                    if (counter == 1)
+                    if (npc.ai[0] == 1)
                     {
                         npc.HealEffect(Main.ActivePlayersCount * 400, true);
                         
                     }
 
-                    if (counter >= waitTime)
+                    if (npc.ai[0] >= npc.ai[1])
                     {
-                        attackType = -1;
-                        counter = 0;
+                        npc.ai[2] = -1;
+                        npc.ai[0] = 0;
                     }
                     break;
             }
 
 
-            if (waitTime <= counter && attackType == -1)
+            if (npc.ai[1] <= npc.ai[0] && npc.ai[2] == -1)
             {
                 Main.NewText("Counter is equal, picking new attack.");
-                attackType = AttackTypes.RandomAttackBasedOnNPC(AttackTypes.EclipseNPC.FishronJr, 1);
+                npc.ai[2] = AttackTypes.RandomAttackBasedOnNPC(AttackTypes.EclipseNPC.FishronJr, 1);
 
-                switch (attackType)
+                switch (npc.ai[2])
                 {
                     case 0:
-                        waitTime = 360;
-                        counter = 0;
+                        npc.ai[1] = 360;
+                        npc.ai[0] = 0;
                         break;
                     case 1:
-                        waitTime = 360;
-                        counter = 0;
+                        npc.ai[1] = 360;
+                        npc.ai[0] = 0;
                         break;
                     case 2:
-                        waitTime = 30;
-                        counter = 0;
+                        npc.ai[1] = 30;
+                        npc.ai[0] = 0;
                         break;
                     case 3:
-                        waitTime = 30;
-                        counter = 0;
+                        npc.ai[1] = 30;
+                        npc.ai[0] = 0;
                         break;
                 }
 
-                Main.NewText("Attack Type = " + attackType);
+                Main.NewText("Attack Type = " + npc.ai[2]);
             }
-            counter++;
+            npc.ai[0]++;
             return false; // prevent default AI from running.
         }
     }
